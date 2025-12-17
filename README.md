@@ -67,9 +67,7 @@ vinyl-spotify-player/
 │   └─ images/
 │
 ├─ hardware/
-│   ├─ cad/
-│   ├─ stl/
-│   └─ schematics/
+│   └─ 3D filez
 │
 ├─ software/
 │   ├─ pi/
