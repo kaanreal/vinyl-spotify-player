@@ -4,12 +4,6 @@ A custom-built Spotify player designed to look and behave like a classic turntab
 
 ---
 
-## Project Description (Short)
-
-A Raspberry Pi–based Spotify player that combines mechanical motion, physical interaction, and digital media playback in a turntable-inspired design.
-
----
-
 ## Project Idea
 
 The goal of this school technology project is to combine **design, mechanics, electronics, and software** into one functional device. The system intentionally mimics the behavior of a traditional record player:
