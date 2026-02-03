@@ -8,22 +8,24 @@ A custom-built Spotify player designed to look and behave like a classic turntab
 
 The goal of this school technology project is to combine **design, mechanics, electronics, and software** into one functional device. The system intentionally mimics the behavior of a traditional record player:
 
-* Placing the tonearm starts music playback and rotates the record.
-* Lifting the tonearm pauses playback and stops the rotation.
+- Placing the tonearm starts music playback and rotates the record.
+- Lifting the tonearm pauses playback and stops the rotation.
 
 Spotify starts automatically when the device is powered on, without requiring a keyboard, mouse, or screen interaction from the user.
 
 ---
 
+d
+
 ## Features
 
-* Automatic Spotify startup (Spotify Connect)
-* Circular touch display showing album artwork
-* Rotating vinyl record (ring construction)
-* Mechanical tonearm used as play/pause control
-* Quiet motor operation
-* Integrated speakers
-* Fully custom 3D-printed enclosure
+- Automatic Spotify startup (Spotify Connect)
+- Circular touch display showing album artwork
+- Rotating vinyl record (ring construction)
+- Mechanical tonearm used as play/pause control
+- Quiet motor operation
+- Integrated speakers
+- Fully custom 3D-printed enclosure
 
 ---
 
@@ -31,27 +33,27 @@ Spotify starts automatically when the device is powered on, without requiring a 
 
 ### Core System
 
-* Raspberry Pi Zero 2 W
+- Raspberry Pi Zero 2 W
 
 ### Display & Input
 
-* Circular HDMI touch display
-* Python-based UI and control logic
+- Circular HDMI touch display
+- Python-based UI and control logic
 
 ### Audio
 
-* External DAC or USB sound card
-* Amplifier and speakers
+- External DAC or USB sound card
+- Amplifier and speakers
 
 ### Mechanics
 
-* Real vinyl record modified into a rotating ring
-* Bearing or turntable-style rotary mechanism for low noise
-* Motor with friction wheel or belt drive
+- Real vinyl record modified into a rotating ring
+- Bearing or turntable-style rotary mechanism for low noise
+- Motor with friction wheel or belt drive
 
 ### Sensors
 
-* Mechanical switch or Hall sensor to detect tonearm position
+- Mechanical switch or Hall sensor to detect tonearm position
 
 ---
 
