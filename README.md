@@ -97,5 +97,3 @@ vinyl-spotify-player/
 ## Project Status
 
 Work in progress (school project)
-
-manyang
