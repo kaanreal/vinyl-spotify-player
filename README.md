@@ -27,31 +27,40 @@ Spotify starts automatically when the device is powered on, without requiring a 
 
 ---
 
-## Technical Overview
+## Bill of Materials (BOM)
 
-### Core System
+### Core
+- Raspberry Pi Zero 2 W  
+- microSD card (16–32 GB)
 
-* Raspberry Pi Zero 2 W
-
-### Display & Input
-
-* Circular HDMI touch display
-* Python-based UI and control logic
+### Display
+- Round HDMI IPS display (≈2.8", 480×480)
 
 ### Audio
-
-* External DAC or USB sound card
-* Amplifier and speakers
+- USB sound card  
+- PAM8403 audio amplifier (2×3 W)  
+- 2× speakers (4 Ω, 3–5 W, 40–50 mm)
 
 ### Mechanics
+- 12" vinyl record (used as rotating ring)  
+- Custom subplatter / subplate (~210 mm)  
+- 608ZZ ball bearing (8×22×7 mm)  
+- DC gear motor JGA25-370 (12 V, ~30 RPM)  
+- GT2 pulley (20T, 5 mm bore, no flange)  
+- Rubber O-ring belt (Ø 170–180 mm)
 
-* Real vinyl record modified into a rotating ring
-* Bearing or turntable-style rotary mechanism for low noise
-* Motor with friction wheel or belt drive
+### Control & Sensors
+- Rotary encoder (EC11)  
+- Hall effect sensor (A3144)  
+- Neodymium magnet (~6×3 mm)
 
-### Sensors
+### Power
+- 12 V power supply  
+- Buck converter (12 V → 5 V)
 
-* Mechanical switch or Hall sensor to detect tonearm position
+### Misc
+- Wires, screws, spacers  
+- Custom 3D-printed enclosure parts
 
 ---
 
@@ -97,5 +106,3 @@ vinyl-spotify-player/
 ## Project Status
 
 Work in progress (school project)
-
-manyang
