@@ -2,7 +2,41 @@
 
 import time
 from typing import Callable, Optional
-import RPi.GPIO as GPIO
+
+# Try to import RPi.GPIO, fall back to mock for testing
+try:
+    import RPi.GPIO as GPIO
+    USE_REAL_GPIO = True
+except (ImportError, RuntimeError):
+    # Mock GPIO for testing on non-Raspberry Pi systems
+    class MockGPIO:
+        BCM = "BCM"
+        IN = "IN"
+        OUT = "OUT"
+        HIGH = 1
+        LOW = 0
+        PUD_UP = "PUD_UP"
+        PUD_DOWN = "PUD_DOWN"
+        
+        @staticmethod
+        def setmode(mode):
+            pass
+        
+        @staticmethod
+        def setup(pin, mode, pull_up_down=None):
+            pass
+        
+        @staticmethod
+        def input(pin):
+            return MockGPIO.HIGH
+        
+        @staticmethod
+        def cleanup(pin=None):
+            pass
+    
+    GPIO = MockGPIO()
+    USE_REAL_GPIO = False
+    print("Warning: Running in mock GPIO mode (not on Raspberry Pi)")
 
 
 class TonearmController:
@@ -19,6 +53,7 @@ class TonearmController:
         self.gpio_pin = gpio_pin
         self.on_place = on_place
         self.on_lift = on_lift
+        self.use_real_gpio = USE_REAL_GPIO
         
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
@@ -31,6 +66,9 @@ class TonearmController:
         
         # Get initial state
         self._update_state()
+        
+        if not self.use_real_gpio:
+            print(f"Tonearm controller initialized in mock mode (GPIO pin {gpio_pin})")
     
     def _get_current_state(self) -> bool:
         """Get the current state of the tonearm switch.
