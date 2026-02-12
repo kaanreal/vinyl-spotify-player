@@ -1,16 +1,17 @@
 """Display renderer for the 480x480 circular display using pygame."""
 
 import os
+import math
 import hashlib
 from typing import Optional, Dict, Any
 from pathlib import Path
 import pygame
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 import requests
 
 
 class DisplayRenderer:
-    """Renders album art and playback information on a circular display."""
+    """Renders spinning album art with vinyl record aesthetics."""
 
     def __init__(self, width: int, height: int, cache_dir: Path):
         """Initialize the display renderer.
@@ -41,77 +42,110 @@ class DisplayRenderer:
         
         pygame.display.set_caption("Vinyl Spotify Player")
         
-        # Font sizes
-        self.font_large = pygame.font.SysFont("Arial", 32, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 24)
-        self.font_small = pygame.font.SysFont("Arial", 18)
+        # Clock for smooth animation
+        self.clock = pygame.time.Clock()
         
         # Colors
-        self.bg_color = (18, 18, 18)
-        self.text_color = (255, 255, 255)
-        self.sub_text_color = (180, 180, 180)
-        self.progress_bg_color = (60, 60, 60)
-        self.progress_fg_color = (30, 215, 96)
+        self.bg_color = (10, 10, 12)
         
-        # Album art settings
-        self.album_art_size = 320
-        self.album_art_x = (width - self.album_art_size) // 2
-        self.album_art_y = 40
+        # Vinyl record settings
+        self.vinyl_size = int(width * 0.95)  # 95% of screen
+        self.album_art_size = int(self.vinyl_size * 0.62)  # Album art is 62% of vinyl
+        self.center_x = width // 2
+        self.center_y = height // 2
+        
+        # Animation state
+        self.rotation_angle = 0.0
+        self.rotation_speed = 0.0  # Degrees per second
+        self.target_rotation_speed = 0.0
+        self.playing_speed = 33.33  # RPM converted to degrees/sec (33.33 RPM = ~200 deg/sec)
+        
+        # Transition state
+        self.transition_alpha = 0.0
+        self.transitioning = False
+        self.old_album_art: Optional[pygame.Surface] = None
         
         # Current track info
         self.current_track_id: Optional[str] = None
         self.current_album_art: Optional[pygame.Surface] = None
+        self.current_album_art_rotated: Optional[pygame.Surface] = None
         self.fallback_art: Optional[pygame.Surface] = None
         
-        # Create fallback album art
+        # Vinyl record base (cached)
+        self.vinyl_base: Optional[pygame.Surface] = None
+        
+        # Create vinyl and fallback art
+        self._create_vinyl_base()
         self._create_fallback_art()
     
-    def _create_fallback_art(self) -> None:
-        """Create a fallback album art image."""
-        size = self.album_art_size
+    
+    def _create_vinyl_base(self) -> None:
+        """Create a realistic vinyl record base with grooves and shine."""
+        size = self.vinyl_size
         
-        # Create PIL image
-        img = Image.new('RGB', (size, size), color=(40, 40, 40))
-        draw = ImageDraw.Draw(img)
+        # Create PIL image for the vinyl
+        vinyl = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(vinyl)
         
-        # Create circular mask
-        mask = Image.new('L', (size, size), 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.ellipse((0, 0, size, size), fill=255)
+        # Main vinyl disc - dark with slight gradient
+        for i in range(20):
+            shade = 15 + i
+            radius = size // 2 - i
+            draw.ellipse(
+                (size//2 - radius, size//2 - radius, size//2 + radius, size//2 + radius),
+                fill=(shade, shade, shade, 255)
+            )
         
-        # Apply mask
-        output = Image.new('RGB', (size, size), (18, 18, 18))
-        output.paste(img, (0, 0), mask)
+        # Draw vinyl grooves (concentric circles)
+        groove_start = self.album_art_size // 2 + 20
+        groove_end = size // 2 - 10
         
-        # Draw musical note icon in center
-        center_x, center_y = size // 2, size // 2
-        draw_on_output = ImageDraw.Draw(output)
-        draw_on_output.ellipse(
-            (center_x - 60, center_y - 60, center_x + 60, center_y + 60),
-            outline=(100, 100, 100),
-            width=4
-        )
+        for radius in range(groove_start, groove_end, 3):
+            alpha = 40 if radius % 6 == 0 else 15
+            draw.ellipse(
+                (size//2 - radius, size//2 - radius, size//2 + radius, size//2 + radius),
+                outline=(0, 0, 0, alpha),
+                width=1
+            )
+        
+        # Add subtle shine effect on one side
+        shine = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        shine_draw = ImageDraw.Draw(shine)
+        
+        # Gradient shine
+        for i in range(30):
+            alpha = int(15 * (1 - i / 30))
+            offset = int(size * 0.15) + i * 2
+            shine_draw.ellipse(
+                (offset, offset, size - offset, size - offset),
+                outline=(255, 255, 255, alpha),
+                width=2
+            )
+        
+        vinyl = Image.alpha_composite(vinyl, shine)
         
         # Convert to pygame surface
-        mode = img.mode
-        size = img.size
-        data = output.tobytes()
-        self.fallback_art = pygame.image.fromstring(data, size, mode)
+        vinyl_bytes = vinyl.tobytes()
+        self.vinyl_base = pygame.image.fromstring(vinyl_bytes, (size, size), 'RGBA')
     
-    def _make_circular_surface(self, image_path: Path) -> pygame.Surface:
-        """Create a circular pygame surface from an image.
-        
-        Args:
-            image_path: Path to the image file.
-        
-        Returns:
-            Circular pygame surface.
-        """
+    def _create_fallback_art(self) -> None:
+        """Create a stylish fallback album art image."""
         size = self.album_art_size
         
-        # Load image with PIL
-        img = Image.open(image_path).convert('RGB')
-        img = img.resize((size, size), Image.Resampling.LANCZOS)
+        # Create gradient background
+        img = Image.new('RGB', (size, size), color=(25, 25, 30))
+        draw = ImageDraw.Draw(img)
+        
+        # Draw concentric circles as music symbol
+        center = size // 2
+        for i in range(5):
+            radius = 30 + i * 15
+            color = (60 + i * 20, 60 + i * 20, 80 + i * 20)
+            draw.ellipse(
+                (center - radius, center - radius, center + radius, center + radius),
+                outline=color,
+                width=3
+            )
         
         # Create circular mask
         mask = Image.new('L', (size, size), 0)
@@ -123,11 +157,47 @@ class DisplayRenderer:
         output.paste(img, (0, 0), mask)
         
         # Convert to pygame surface
-        mode = output.mode
-        img_size = output.size
         data = output.tobytes()
+        self.fallback_art = pygame.image.fromstring(data, (size, size), 'RGB')
+    
+    
+    def _make_circular_surface(self, image_path: Path) -> pygame.Surface:
+        """Create a circular pygame surface from an image with enhanced quality.
         
-        return pygame.image.fromstring(data, img_size, mode)
+        Args:
+            image_path: Path to the image file.
+        
+        Returns:
+            Circular pygame surface.
+        """
+        size = self.album_art_size
+        
+        # Load image with PIL
+        img = Image.open(image_path).convert('RGB')
+        
+        # Enhance image quality
+        img = img.resize((size, size), Image.Resampling.LANCZOS)
+        enhancer = ImageEnhance.Sharpness(img)
+        img = enhancer.enhance(1.2)
+        
+        # Create circular mask with anti-aliasing
+        mask = Image.new('L', (size, size), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.ellipse((0, 0, size - 1, size - 1), fill=255)
+        
+        # Smooth the mask edges
+        mask = mask.filter(ImageFilter.GaussianBlur(1))
+        
+        # Apply mask
+        output = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        output.paste(img, (0, 0))
+        output.putalpha(mask)
+        
+        # Convert to pygame surface
+        data = output.tobytes()
+        surface = pygame.image.fromstring(data, (size, size), 'RGBA')
+        
+        return surface.convert_alpha()
     
     def _get_cache_path(self, url: str) -> Path:
         """Get cache file path for an album art URL.
@@ -189,176 +259,179 @@ class DisplayRenderer:
         
         return self.fallback_art
     
-    def _truncate_text(self, text: str, font: pygame.font.Font, max_width: int) -> str:
-        """Truncate text to fit within max width.
+    def _update_rotation(self, is_playing: bool, delta_time: float) -> None:
+        """Update rotation animation smoothly.
         
         Args:
-            text: Text to truncate.
-            font: Pygame font.
-            max_width: Maximum width in pixels.
-        
-        Returns:
-            Truncated text with ellipsis if needed.
+            is_playing: Whether music is currently playing.
+            delta_time: Time elapsed since last frame in seconds.
         """
-        if font.size(text)[0] <= max_width:
-            return text
+        # Set target speed based on playback state
+        self.target_rotation_speed = self.playing_speed if is_playing else 0.0
         
-        # Binary search for the right length
-        left, right = 0, len(text)
-        result = text
+        # Smooth acceleration/deceleration
+        speed_diff = self.target_rotation_speed - self.rotation_speed
+        acceleration = 50.0  # Degrees per second squared
         
-        while left < right:
-            mid = (left + right + 1) // 2
-            truncated = text[:mid] + "..."
-            
-            if font.size(truncated)[0] <= max_width:
-                result = truncated
-                left = mid
-            else:
-                right = mid - 1
+        if abs(speed_diff) > 0.1:
+            change = min(abs(speed_diff), acceleration * delta_time)
+            self.rotation_speed += change if speed_diff > 0 else -change
+        else:
+            self.rotation_speed = self.target_rotation_speed
         
-        return result
+        # Update rotation angle
+        self.rotation_angle += self.rotation_speed * delta_time
+        self.rotation_angle %= 360
     
-    def _format_time(self, ms: int) -> str:
-        """Format milliseconds as MM:SS.
+    def _rotate_surface(self, surface: pygame.Surface, angle: float) -> pygame.Surface:
+        """Rotate a surface smoothly around its center.
         
         Args:
-            ms: Time in milliseconds.
+            surface: Surface to rotate.
+            angle: Rotation angle in degrees.
         
         Returns:
-            Formatted time string.
+            Rotated surface.
         """
-        seconds = ms // 1000
-        minutes = seconds // 60
-        seconds = seconds % 60
-        return f"{minutes}:{seconds:02d}"
+        return pygame.transform.rotate(surface, -angle)
+    
+    def _apply_fade_transition(self, alpha: float) -> None:
+        """Apply fade overlay for transitions.
+        
+        Args:
+            alpha: Alpha value (0-255).
+        """
+        if alpha > 0:
+            fade_surface = pygame.Surface((self.width, self.height))
+            fade_surface.fill(self.bg_color)
+            fade_surface.set_alpha(int(alpha))
+            self.screen.blit(fade_surface, (0, 0))
     
     def render(self, playback_data: Optional[Dict[str, Any]]) -> None:
-        """Render the display with current playback information.
+        """Render spinning vinyl with album art.
         
         Args:
             playback_data: Current playback data from Spotify API.
         """
-        # Clear screen
+        # Get delta time for smooth animation
+        delta_time = self.clock.tick(60) / 1000.0  # 60 FPS target
+        
+        # Clear screen with dark background
         self.screen.fill(self.bg_color)
         
         if not playback_data or not playback_data.get("item"):
-            # Nothing playing
-            self._render_idle()
+            # Nothing playing - show idle state
+            self._render_idle(delta_time)
             pygame.display.flip()
             return
         
         track = playback_data["item"]
         is_playing = playback_data.get("is_playing", False)
-        progress_ms = playback_data.get("progress_ms", 0)
         
         # Extract track info
         track_id = track["id"]
-        track_name = track["name"]
-        artists = ", ".join([artist["name"] for artist in track["artists"]])
-        album_name = track["album"]["name"]
-        duration_ms = track["duration_ms"]
-        
-        # Get album art URL (largest available)
         album_images = track["album"]["images"]
         album_art_url = album_images[0]["url"] if album_images else None
         
-        # Load album art if track changed
+        # Handle track change with transition
         if track_id != self.current_track_id:
+            self.old_album_art = self.current_album_art
             self.current_track_id = track_id
+            
+            # Load new album art
             if album_art_url:
                 self.current_album_art = self._load_album_art(album_art_url)
             else:
                 self.current_album_art = self.fallback_art
+            
+            # Start transition
+            self.transitioning = True
+            self.transition_alpha = 0.0
         
-        # Render album art
+        # Update rotation animation
+        self._update_rotation(is_playing, delta_time)
+        
+        # Render the vinyl record (rotates)
+        if self.vinyl_base:
+            rotated_vinyl = self._rotate_surface(self.vinyl_base, self.rotation_angle)
+            vinyl_rect = rotated_vinyl.get_rect(center=(self.center_x, self.center_y))
+            self.screen.blit(rotated_vinyl, vinyl_rect.topleft)
+        
+        # Render album art (rotates with vinyl)
         if self.current_album_art:
-            self.screen.blit(self.current_album_art, (self.album_art_x, self.album_art_y))
+            rotated_art = self._rotate_surface(self.current_album_art, self.rotation_angle)
+            art_rect = rotated_art.get_rect(center=(self.center_x, self.center_y))
+            
+            # Handle transition fade
+            if self.transitioning and self.old_album_art:
+                # Fade out old art
+                old_rotated = self._rotate_surface(self.old_album_art, self.rotation_angle)
+                old_rect = old_rotated.get_rect(center=(self.center_x, self.center_y))
+                
+                old_alpha = int(255 * (1.0 - self.transition_alpha))
+                old_rotated.set_alpha(old_alpha)
+                self.screen.blit(old_rotated, old_rect.topleft)
+                
+                # Fade in new art
+                new_alpha = int(255 * self.transition_alpha)
+                rotated_art.set_alpha(new_alpha)
+                self.screen.blit(rotated_art, art_rect.topleft)
+                
+                # Update transition
+                self.transition_alpha += delta_time * 2.0  # 0.5 second transition
+                
+                if self.transition_alpha >= 1.0:
+                    self.transitioning = False
+                    self.transition_alpha = 1.0
+                    self.old_album_art = None
+            else:
+                # Normal rendering
+                self.screen.blit(rotated_art, art_rect.topleft)
         
-        # Render track name
-        y_pos = self.album_art_y + self.album_art_size + 20
-        track_text = self._truncate_text(track_name, self.font_large, self.width - 40)
-        track_surface = self.font_large.render(track_text, True, self.text_color)
-        track_rect = track_surface.get_rect(centerx=self.width // 2, top=y_pos)
-        self.screen.blit(track_surface, track_rect)
-        
-        # Render artists
-        y_pos += 40
-        artists_text = self._truncate_text(artists, self.font_medium, self.width - 40)
-        artists_surface = self.font_medium.render(artists_text, True, self.sub_text_color)
-        artists_rect = artists_surface.get_rect(centerx=self.width // 2, top=y_pos)
-        self.screen.blit(artists_surface, artists_rect)
-        
-        # Render album name
-        y_pos += 30
-        album_text = self._truncate_text(album_name, self.font_small, self.width - 40)
-        album_surface = self.font_small.render(album_text, True, self.sub_text_color)
-        album_rect = album_surface.get_rect(centerx=self.width // 2, top=y_pos)
-        self.screen.blit(album_surface, album_rect)
-        
-        # Render progress bar
-        y_pos = self.height - 50
-        progress_bar_width = self.width - 80
-        progress_bar_height = 6
-        progress_bar_x = 40
-        
-        # Background
-        pygame.draw.rect(
-            self.screen,
-            self.progress_bg_color,
-            (progress_bar_x, y_pos, progress_bar_width, progress_bar_height),
-            border_radius=3
-        )
-        
-        # Progress
-        if duration_ms > 0:
-            progress_ratio = min(progress_ms / duration_ms, 1.0)
-            progress_width = int(progress_bar_width * progress_ratio)
-            pygame.draw.rect(
-                self.screen,
-                self.progress_fg_color,
-                (progress_bar_x, y_pos, progress_width, progress_bar_height),
-                border_radius=3
-            )
-        
-        # Time labels
-        y_pos += 15
-        current_time = self._format_time(progress_ms)
-        total_time = self._format_time(duration_ms)
-        
-        time_surface = self.font_small.render(current_time, True, self.sub_text_color)
-        self.screen.blit(time_surface, (progress_bar_x, y_pos))
-        
-        time_surface = self.font_small.render(total_time, True, self.sub_text_color)
-        time_rect = time_surface.get_rect(right=progress_bar_x + progress_bar_width, top=y_pos)
-        self.screen.blit(time_surface, time_rect)
-        
-        # Paused indicator
-        if not is_playing:
-            pause_surface = self.font_medium.render("PAUSED", True, (255, 100, 100))
-            pause_rect = pause_surface.get_rect(center=(self.width // 2, 20))
-            self.screen.blit(pause_surface, pause_rect)
+        # Add subtle glow when playing
+        if is_playing and self.rotation_speed > 10:
+            self._render_glow()
         
         pygame.display.flip()
     
-    def _render_idle(self) -> None:
-        """Render idle state when nothing is playing."""
+    def _render_idle(self, delta_time: float) -> None:
+        """Render idle state when nothing is playing.
+        
+        Args:
+            delta_time: Time elapsed since last frame.
+        """
+        # Slow rotation when idle
+        self._update_rotation(False, delta_time)
+        
+        # Render vinyl base
+        if self.vinyl_base:
+            rotated_vinyl = self._rotate_surface(self.vinyl_base, self.rotation_angle * 0.2)
+            vinyl_rect = rotated_vinyl.get_rect(center=(self.center_x, self.center_y))
+            self.screen.blit(rotated_vinyl, vinyl_rect.topleft)
+        
         # Render fallback art
         if self.fallback_art:
-            self.screen.blit(self.fallback_art, (self.album_art_x, self.album_art_y))
+            rotated_art = self._rotate_surface(self.fallback_art, self.rotation_angle * 0.2)
+            art_rect = rotated_art.get_rect(center=(self.center_x, self.center_y))
+            self.screen.blit(rotated_art, art_rect.topleft)
+    
+    def _render_glow(self) -> None:
+        """Render subtle glow effect around the vinyl."""
+        glow_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         
-        # Render message
-        y_pos = self.album_art_y + self.album_art_size + 40
-        message = "No music playing"
-        message_surface = self.font_large.render(message, True, self.sub_text_color)
-        message_rect = message_surface.get_rect(centerx=self.width // 2, top=y_pos)
-        self.screen.blit(message_surface, message_rect)
+        # Draw multiple circles with decreasing alpha for glow effect
+        for i in range(8):
+            radius = (self.vinyl_size // 2) + (i * 4)
+            alpha = int(15 * (1 - i / 8))
+            pygame.draw.circle(
+                glow_surface,
+                (30, 215, 96, alpha),
+                (self.center_x, self.center_y),
+                radius,
+                2
+            )
         
-        y_pos += 50
-        hint = "Start playback from your phone"
-        hint_surface = self.font_small.render(hint, True, self.sub_text_color)
-        hint_rect = hint_surface.get_rect(centerx=self.width // 2, top=y_pos)
-        self.screen.blit(hint_surface, hint_rect)
+        self.screen.blit(glow_surface, (0, 0))
     
     def handle_events(self) -> bool:
         """Handle pygame events.
