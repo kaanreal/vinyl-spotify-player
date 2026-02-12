@@ -1,307 +1,160 @@
 # Vinyl Spotify Player
 
-A physical vinyl-inspired Spotify player featuring a rotating display, tonearm control, and motor-driven turntable simulation. Designed for Raspberry Pi Zero 2 W with full PC/VM development support.
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Raspberry%20Pi-lightgrey.svg)]()
 
-**You can develop and test everything on your PC/VM first. Hardware is optional until final deployment.**
+A fun project that turns Spotify into a vinyl-like experience! Features a smooth rotating circular display with album artwork and a progress bar that matches your album colors.
 
-## Features
+**Try it on your computer first - no hardware needed!**
 
-- 🎵 **Spotify Connect Integration** - Raspotify for seamless Premium playback
-- 🎨 **480x480 Touch Display** - Rotating album artwork synced with playback
-- 🎚️ **Hall Effect Tonearm** - Physical play/pause control via magnet sensor
-- 🔊 **Rotary Encoder** - Physical volume knob
-- 💿 **Motor Control** - DC gear motor spinning at ~33 RPM synced with playback
-- 🖱️ **Touch Gestures** - Tap to play/pause, swipe for next/previous
-- 💻 **Full PC Development Mode** - Test everything without hardware using keyboard/mouse
-- 🔄 **Hardware Abstraction** - Automatic platform detection and stub/real implementation switching
+![Demo](docs/demo.gif)
 
-## Hardware (Final Deployment on Pi)
+## ✨ What It Does
 
-- Raspberry Pi Zero 2 W
-- 2.8" round 480x480 touch display (e.g., Waveshare)
-- Hall effect sensor (e.g., A3144)
-- Rotary encoder (e.g., KY-040)
-- DC gear motor with driver (e.g., L298N)
-- Power supply and wiring (see [docs/wiring.md](docs/wiring.md))
+- 🎨 **Rotating Album Art** - Smooth 60 FPS circular display that spins with your music
+- 🌈 **Smart Colors** - Progress bar automatically matches your album artwork
+- ⌨️ **Easy Controls** - Use your keyboard to control Spotify
+- 🎵 **Full Spotify Integration** - Play, pause, skip tracks, adjust volume
+- 🔄 **Smooth Animations** - Professional animations inspired by Apple's design
 
-## Quick Start (PC/VM)
+## 🚀 Quick Start (5 minutes)
 
 ### 1. Install
 
 **Windows:**
-
 ```powershell
 .\scripts\install.ps1
 ```
 
-**Linux/macOS:**
-
+**Mac/Linux:**
 ```bash
 chmod +x scripts/*.sh
 ./scripts/install.sh --pc
 ```
 
-### 2. Configure Spotify
+### 2. Setup Spotify
 
-1. Create a Spotify app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Set redirect URI to: `http://localhost:8888/callback`
-3. Edit `app/config/config.json`:
-    ```json
-    {
-        "spotify": {
-            "client_id": "your_client_id_here",
-            "client_secret": "your_client_secret_here",
-            "redirect_uri": "http://localhost:8888/callback",
-            "device_name": "raspotify"
-        }
-    }
-    ```
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new app
+3. Add this redirect URI: `http://127.0.0.1:3000/callback`
+4. Copy your Client ID and Client Secret
+5. Edit `app/config/config.json` with your credentials
 
-### 3. Pair with Spotify
+### 3. Connect Your Account
 
 **Windows:**
-
 ```powershell
 .\scripts\pair.ps1
 ```
 
-**Linux/macOS:**
-
+**Mac/Linux:**
 ```bash
 ./scripts/pair.sh
 ```
 
-This opens your browser to authorize the app. Tokens are saved locally for future use.
+This opens your browser to authorize the app.
 
-### 4. Run Development Mode
+### 4. Run It!
 
 **Windows:**
-
 ```powershell
 .\scripts\run-dev.ps1
 ```
 
-**Linux/macOS:**
-
+**Mac/Linux:**
 ```bash
 ./scripts/run-dev.sh
 ```
 
-A 480x480 window will open showing the UI. Use your keyboard to simulate hardware:
+A circular window appears showing your current Spotify track!
 
-| Key        | Action            |
-| ---------- | ----------------- |
-| T          | Toggle tonearm    |
-| SPACE      | Tap (play/pause)  |
-| LEFT/RIGHT | Swipe (prev/next) |
-| UP/DOWN    | Encoder (volume)  |
-| ESC        | Quit              |
+## 🎮 Controls
 
-## Quick Start (Raspberry Pi)
+Use your keyboard to control playback:
 
-### 1. Install
+| Key | Action |
+|-----|--------|
+| **SPACE** | Play/Pause |
+| **LEFT/RIGHT** | Previous/Next Track |
+| **UP/DOWN** | Volume Up/Down |
+| **T** | Toggle Tonearm (simulates vinyl player arm) |
+| **ESC** | Exit |
 
-```bash
-chmod +x scripts/*.sh
-./scripts/install.sh --pi
-```
+## 💡 How It Works
 
-This installs:
+The app uses Spotify's Web API to:
+1. Get your currently playing track
+2. Download the album artwork
+3. Extract a vibrant color for the progress bar
+4. Rotate the artwork smoothly at 33 RPM (like a real vinyl record)
+5. Show a circular progress bar around the edge
 
-- Python dependencies
-- Raspotify (Spotify Connect daemon)
-- Systemd service for auto-start
+Everything runs at 60 FPS for buttery smooth animations!
 
-### 2. Configure and Pair
+## 🎓 For School Projects
 
-Same as PC mode:
+This project demonstrates:
+- **API Integration** - Spotify Web API with OAuth
+- **UI/UX Design** - Smooth animations and responsive interface
+- **Software Architecture** - Clean code structure with separation of concerns
+- **Cross-Platform Development** - Works on Windows, Mac, Linux, and Raspberry Pi
+- **Real-World Application** - Actual useful software you can use daily
 
-```bash
-# Edit config
-nano app/config/config.json
-
-# Pair with Spotify
-./scripts/pair.sh
-```
-
-### 3. Run
-
-**Manual start:**
-
-```bash
-./scripts/run-dev.sh  # For testing
-```
-
-**Auto-start on boot:**
-
-```bash
-sudo systemctl enable vinyl-player
-sudo systemctl start vinyl-player
-```
-
-**Check status:**
-
-```bash
-sudo systemctl status vinyl-player
-sudo journalctl -u vinyl-player -f
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 vinyl-spotify-player/
 ├── app/
-│   ├── main.py                    # Main application entry point
-│   ├── config/
-│   │   ├── config.example.json    # Configuration template
-│   │   ├── config_loader.py       # Config loading
-│   │   └── validate.py            # Config validation
-│   ├── spotify/
-│   │   ├── oauth_pair.py          # OAuth authorization flow
-│   │   ├── tokens.py              # Token management & refresh
-│   │   ├── api.py                 # Spotify Web API client
-│   │   ├── device.py              # Device management
-│   │   └── control.py             # High-level playback control
-│   ├── ui/
-│   │   ├── display.py             # Main pygame UI (480x480)
-│   │   ├── artwork_cache.py       # Background artwork downloading
-│   │   ├── touch_input.py         # Touch gesture detection
-│   │   └── cover_rotation.py      # Rotating artwork animation
-│   ├── io/
-│   │   ├── platform.py            # Platform detection (Pi vs PC)
-│   │   ├── tonearm_hall.py        # Tonearm sensor (real + stub)
-│   │   ├── volume_encoder.py      # Rotary encoder (real + stub)
-│   │   └── motor_control.py       # Motor driver (real + stub)
-│   └── util/
-│       ├── paths.py               # Path utilities
-│       └── logging.py             # Logging configuration
-├── scripts/
-│   ├── install.sh / install.ps1   # Installation
-│   ├── pair.sh / pair.ps1         # OAuth pairing
-│   ├── run-dev.sh / run-dev.ps1   # Run in dev mode
-│   ├── doctor.sh                  # System diagnostics
-│   ├── update.sh                  # Update dependencies
-│   └── uninstall.sh               # Uninstall
-├── systemd/
-│   └── vinyl-player.service       # Systemd service for Pi
-├── docs/
-│   ├── wiring.md                  # Hardware wiring guide
-│   ├── assembly.md                # Physical assembly instructions
-│   └── troubleshooting.md         # Common issues and fixes
-├── data/
-│   ├── tokens/                    # Spotify tokens (gitignored)
-│   ├── cache/                     # Album artwork cache
-│   └── logs/                      # Application logs
-├── pyproject.toml                 # Python dependencies
-└── README.md                      # This file
+│   ├── main.py           # Main application
+│   ├── spotify/          # Spotify API integration
+│   ├── ui/               # Display and animations  
+│   └── config/           # Configuration files
+├── scripts/              # Setup and run scripts
+└── docs/                 # Documentation
 ```
 
-## How It Works
+## 🔧 Customization
 
-### Architecture
+Edit `app/config/config.json` to customize:
+- **Display size** - Change `width` and `height`
+- **FPS** - Adjust `fps` (30-60 recommended)
+- **Rotation speed** - Change `target_rpm` (default: 33.3)
+- **Keyboard shortcuts** - Modify `dev_mode` keys
 
-The app is built with platform abstraction:
+## ❓ Common Issues
 
-- **Platform Detection** (`app/io/platform.py`) - Auto-detects Raspberry Pi vs PC
-- **Hardware Modules** - Each hardware component has:
-    - **Real implementation** - Uses GPIO/hardware on Pi
-    - **Stub implementation** - Simulated behavior for PC/VM
-- **Factory Functions** - Auto-select real or stub based on platform
+**"No active device found"**
+- Make sure Spotify is playing on your phone or computer first
 
-### Spotify Integration
+**"Invalid redirect URI"**
+- Check that you added `http://127.0.0.1:3000/callback` exactly in Spotify Dashboard
 
-- **Raspotify** - Runs as a Spotify Connect device on Pi
-- **Web API** - Controls playback, reads state, adjusts volume
-- **OAuth Flow** - Authorization Code Flow with refresh tokens
-- **Polling** - Checks playback state every 1 second
-- **Device Management** - Auto-transfers playback to Raspotify device
+**"No tokens found"**
+- Run the pair script again: `./scripts/pair.ps1` or `./scripts/pair.sh`
 
-### UI & Animation
+**Album art not showing**
+- Check your internet connection
+- Look for errors in `data/logs/`
 
-- **Pygame Display** - 480x480 window (PC) or fullscreen (Pi)
-- **Rotating Album Art** - Synced with motor RPM (default 33.3 RPM)
-- **Touch Gestures** - Tap and swipe detection
-- **Background Downloads** - Artwork cached to prevent UI freezing
-- **Progress Bar** - Real-time playback progress
+## 🤝 Contributing
 
-### Event Flow
+Want to improve this project?
+1. Fork it
+2. Make your changes
+3. Submit a pull request
 
-1. **Tonearm DOWN** → Play + Start Motor + Start Rotation
-2. **Tonearm UP** → Pause + Stop Motor + Stop Rotation
-3. **Touch TAP** → Toggle play/pause
-4. **Swipe LEFT/RIGHT** → Previous/Next track
-5. **Encoder Rotation** → Adjust volume
-6. **Playback State Changes** (from phone/other device) → Motor and rotation sync automatically
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Development & Testing
+## 📄 License
 
-### Diagnostics
+MIT License - Feel free to use for school projects, personal use, or learning!
 
-Run system checks:
+## 🙏 Credits
 
-```bash
-./scripts/doctor.sh
-```
-
-This checks:
-
-- Python installation
-- Virtual environment
-- Configuration
-- Spotify tokens
-- API connectivity
-- Available devices
-
-### Logs
-
-Logs are written to:
-
-- Console (stdout)
-- `data/logs/vinyl_player_YYYYMMDD.log`
-
-### Testing Without Spotify Premium
-
-You need Spotify Premium for playback. However, you can:
-
-- Test OAuth flow without Premium
-- Use the diagnostics script to check connectivity
-- Develop UI/hardware modules independently
-
-### Customization
-
-Edit `app/config/config.json`:
-
-- `display.fps` - UI refresh rate
-- `motor.target_rpm` - Rotation speed
-- `polling.spotify_state_interval_ms` - How often to check Spotify state
-- `dev_mode.enabled` - Force dev mode on/off
-- GPIO pins for hardware components
-
-## Troubleshooting
-
-See [docs/troubleshooting.md](docs/troubleshooting.md) for common issues.
-
-**Quick fixes:**
-
-- **"No tokens found"** → Run `./scripts/pair.sh`
-- **"Invalid configuration"** → Edit `app/config/config.json` with your Spotify credentials
-- **"No active device"** → Make sure Spotify is playing on any device, or install Raspotify on Pi
-- **UI frozen when loading artwork** → Check internet connection, artwork downloads in background
-
-## Contributing
-
-This project is designed for personal use and education. Feel free to fork and customize!
-
-## License
-
-MIT License - see [LICENSE](LICENSE)
-
-## Credits
-
-- Built with [pygame](https://www.pygame.org/) for UI
-- [Spotify Web API](https://developer.spotify.com/documentation/web-api)
-- [Raspotify](https://github.com/dtcooper/raspotify) for Spotify Connect on Pi
+- [Pygame](https://www.pygame.org/) - Game/UI library
+- [Spotify Web API](https://developer.spotify.com/documentation/web-api) - Music control
+- Built as a school/learning project
 
 ---
 
-**Enjoy your vinyl-inspired Spotify experience! 🎵💿**
+**Enjoy your vinyl Spotify experience! 🎵**

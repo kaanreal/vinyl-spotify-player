@@ -22,10 +22,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual environments
 .venv/
 venv/
+env/
+ENV/
 
 # IDE
 .vscode/
@@ -33,15 +36,24 @@ venv/
 *.swp
 *.swo
 *~
+*.code-workspace
 
-# Project specific
-data/tokens/*.json
-data/cache/*
-!data/cache/.gitkeep
-data/logs/*
-!data/logs/.gitkeep
+# Project specific - Auto-generated folders
+data/
 app/config/config.json
 
 # OS
 .DS_Store
 Thumbs.db
+*.bak
+*.tmp
+.directory
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation builds
+docs/_build/
+site/

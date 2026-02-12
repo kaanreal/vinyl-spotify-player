@@ -1,24 +1,27 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## v1.0.0 - Initial Release
 
-## [1.0.0] - 2026-02-12
+### Features
+- **Spotify Integration** - Full playback control via Web API
+- **OAuth Authentication** - Secure login with automatic token refresh
+- **Circular Display** - 480x480 rotating vinyl-style album artwork
+- **Smooth Animations** - 60 FPS with Apple-style easing
+- **Dynamic Colors** - Progress bar matches album artwork
+- **Keyboard Controls** - Play/pause, skip, volume control
+- **Cross-Platform** - Works on Windows, Mac, and Linux
 
-### Added
+### Technical
+- 100ms polling for instant response
+- Background artwork caching
+- Delta-time based animations
+- Color extraction from album art
+- Comprehensive error handling
+- Automated setup scripts
 
-- Initial release of Vinyl Spotify Player
-- Full PC/VM development mode with hardware simulation
-- Raspberry Pi Zero 2 W support
-- Spotify Connect integration via Raspotify
-- OAuth Authorization Code Flow with token refresh
-- 480x480 round display UI with pygame
-- Hall effect sensor support (tonearm play/pause)
-- Touch input with tap and swipe gestures
-- Rotary encoder for volume control
-- Motor control with RPM simulation
-- Rotating album artwork synchronized with playback
-- Platform auto-detection (Pi vs PC)
-- Development mode with keyboard simulation
-- Automated installation scripts
-- Systemd service for Pi deployment
-- Comprehensive documentation
+### User Experience
+- Clean, minimal interface
+- Smooth transitions (300ms crossfades)
+- Responsive keyboard shortcuts
+- Detailed logging for debugging
+
