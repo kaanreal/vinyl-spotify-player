@@ -1,0 +1,18 @@
+[Unit]
+Description=Vinyl Spotify Player Display
+After=network-online.target raspotify.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/vinyl-spotify-player
+Environment="DISPLAY=:0"
+Environment="SDL_FBDEV=/dev/fb0"
+Environment="SDL_VIDEODRIVER=fbcon"
+ExecStart=/usr/bin/python3 /home/pi/vinyl-spotify-player/src/main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

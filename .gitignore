@@ -1,0 +1,38 @@
+# Vinyl Spotify Player .gitignore
+
+# Configuration files
+config.json
+tokens.json
+
+# Cache directories
+album_art_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
