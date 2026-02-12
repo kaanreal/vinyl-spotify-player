@@ -1,22 +1,31 @@
-# Vinyl Spotify Player .gitignore
-
-# Configuration files
-config.json
-tokens.json
-
-# Cache directories
-album_art_cache/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
 # Python
-*.egg-info/
-dist/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
 .eggs/
-.pytest_cache/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
 
 # IDE
 .vscode/
@@ -25,14 +34,14 @@ build/
 *.swo
 *~
 
+# Project specific
+data/tokens/*.json
+data/cache/*
+!data/cache/.gitkeep
+data/logs/*
+!data/logs/.gitkeep
+app/config/config.json
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Virtual environments
-venv/
-env/
-ENV/

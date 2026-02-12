@@ -1,0 +1,30 @@
+[project]
+name = "vinyl-spotify-player"
+version = "1.0.0"
+description = "Physical vinyl-inspired Spotify player with touch display and motor control"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Vinyl Spotify Player"}
+]
+
+dependencies = [
+    "requests>=2.31.0",
+    "pygame>=2.5.2",
+    "python-dotenv>=1.0.0",
+    "Pillow>=10.2.0",
+]
+
+[project.optional-dependencies]
+pi = [
+    "RPi.GPIO>=0.7.1",
+    "gpiozero>=2.0.1",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]

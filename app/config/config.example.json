@@ -1,0 +1,40 @@
+{
+    "spotify": {
+        "client_id": "YOUR_SPOTIFY_CLIENT_ID",
+        "client_secret": "YOUR_SPOTIFY_CLIENT_SECRET",
+        "redirect_uri": "http://localhost:8888/callback",
+        "device_name": "raspotify"
+    },
+    "display": {
+        "width": 480,
+        "height": 480,
+        "fps": 30
+    },
+    "motor": {
+        "target_rpm": 33.3,
+        "pwm_pin": 18,
+        "dir_pin": 23,
+        "enable_pin": 24
+    },
+    "tonearm": {
+        "hall_pin": 17,
+        "poll_interval_ms": 50
+    },
+    "encoder": {
+        "clk_pin": 5,
+        "dt_pin": 6,
+        "volume_step": 5
+    },
+    "polling": {
+        "spotify_state_interval_ms": 1000
+    },
+    "dev_mode": {
+        "enabled": true,
+        "tonearm_key": "t",
+        "play_pause_key": "space",
+        "next_key": "right",
+        "prev_key": "left",
+        "volume_up_key": "up",
+        "volume_down_key": "down"
+    }
+}
