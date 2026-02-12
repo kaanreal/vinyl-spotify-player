@@ -1,0 +1,20 @@
+{
+    "spotify": {
+        "client_id": "YOUR_SPOTIFY_CLIENT_ID",
+        "client_secret": "YOUR_SPOTIFY_CLIENT_SECRET",
+        "redirect_uri": "http://127.0.0.1:8888/callback",
+        "device_name": "Vinyl Spotify Player"
+    },
+    "gpio": {
+        "tonearm_pin": 17,
+        "tonearm_pull": "UP",
+        "tonearm_active_state": 0
+    },
+    "display": {
+        "width": 480,
+        "height": 480,
+        "fullscreen": true
+    },
+    "cache_dir": "./cache",
+    "token_file": "tokens.json"
+}
