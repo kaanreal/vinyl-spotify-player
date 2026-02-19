@@ -103,6 +103,25 @@ vinyl-spotify-player/
 
 ---
 
+## Quick Start (Raspberry Pi)
+
+```bash
+cd software/install
+chmod +x setup.sh
+./setup.sh
+```
+
+The setup script installs dependencies, syncs the project to `/opt/vinyl-spotify-player`, and creates a systemd service named `vinyl-spotify-player`.
+
 ## Project Status
 
 Work in progress (school project)
+
+### Implemented Starter Files
+
+- `software/pi/main.py` runtime state machine scaffold
+- `software/pi/motor.py` motor controller abstraction
+- `software/pi/display.py` display abstraction
+- `software/install/setup.sh` Pi bootstrap + service installer
+- `docs/concept.md` architecture + milestones
+- `docs/wiring.md` initial wiring map + safety notes
