@@ -12,6 +12,22 @@ async function spotifyRequest(endpoint, method = "GET", body = null) {
 function getCurrentSong() {
     return spotifyRequest("me/player/currently-playing");
 }
+function checkisPlaying() {
+    console.log("Überprüfe Wiedergabestatus...");
+    getCurrentSong()
+    .then(response => response.json())  
+    .then(data => {
+        if(data.isPlaying  || data.is_playing) { // Je nach Spotify API Version könnte es isPlaying oder is_playing sein
+            isPlaying = true;
+            return;
+        } else {
+            isPlaying = false;
+            return; 
+        }
+
+    })
+
+}
 function updateCover() {
     getCurrentSong()
         .then(response => response.json())
@@ -23,6 +39,7 @@ function updateCover() {
             }
 
             const coverUrl = data.item.album.images[0].url;
+            
           //  document.querySelector("#Cover img").src = coverUrl;
             document.getElementById("round-screen").style.backgroundImage = `url(${coverUrl})`;
             document.getElementById("round-screen").style.backgroundSize = "cover";

@@ -31,11 +31,20 @@ function animateCover(timestamp) {
 
     requestAnimationFrame(animateCover);
 }
+function isplaying() {
+    console.log("Überprüfe isplaying...");
+    if  (isPlaying) {
+        rotating = true; // START
+    }else {
+        rotating = false; // STOP
+    }
+}
 
 requestAnimationFrame(animateCover);
 
 document.getElementById("play-pause").addEventListener("click", () => {
     if (isPlaying) {
+       
         pauseTrack().then(() => {
             isPlaying = false;
             rotating = false; // STOP
@@ -43,6 +52,7 @@ document.getElementById("play-pause").addEventListener("click", () => {
             switch_playPause();
         });
     } else {
+        
         playTrack().then(() => {
             isPlaying = true;
             rotating = true; // START
