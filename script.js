@@ -32,7 +32,7 @@ function animateCover(timestamp) {
     requestAnimationFrame(animateCover);
 }
 function isplaying() {
-    console.log("Überprüfe isplaying...");
+    //console.log("Überprüfe isplaying...");
     if  (isPlaying) {
         rotating = true; // START
     }else {

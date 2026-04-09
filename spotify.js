@@ -13,7 +13,7 @@ function getCurrentSong() {
     return spotifyRequest("me/player/currently-playing");
 }
 function checkisPlaying() {
-    console.log("Überprüfe Wiedergabestatus...");
+   // console.log("Überprüfe Wiedergabestatus...");
     getCurrentSong()
     .then(response => response.json())  
     .then(data => {
