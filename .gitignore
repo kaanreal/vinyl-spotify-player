@@ -1,0 +1,7 @@
+# Ignoriere den Access Token (soll nie ins Repo)
+access_token.txt
+.vscode/
+
+# Optional, aber sinnvoll:
+__pycache__/
+*.pyc
