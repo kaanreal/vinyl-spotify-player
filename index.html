@@ -1,34 +1,38 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <title>Music Player</title>
-  </head>
-  <body>
-    <div id="round-screen">
-        <div class="vinyl-overlay"></div>
-        <div class="vinyl-hole"></div>
-    </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Music Player</title>
+</head>
+
+<body>
+  <div id="vinyl-version">
+    <div class="vinyl-disc"></div>
+    <div class="vinyl-label"></div>
+    <div class="vinyl-hole"></div>
+  </div>
 
 
-    
-    <div id="UI">
-      <h2 id="song-title">CURRENT SONG</h2>
 
-      <section id="Controls">
-        <button id="previous">Previous</button>
+  <div id="UI">
+    <h2 id="song-title">CURRENT SONG</h2>
 
-        <button id="play-pause">Play/Pause</button>
+    <section id="Controls">
+      <button id="previous">Previous</button>
 
-        <button id="next">Next</button>
-      </section>
-    </div>
+      <button id="play-pause">Play/Pause</button>
 
-    <script src="config.js"></script>
-    <script src="script.js"></script>
-    <script src="spotify.js"></script>
-    <script src="update.js"></script>
-  </body>
+      <button id="next">Next</button>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="spotify.js"></script>
+  <script src="update.js"></script>
+</body>
+
 </html>

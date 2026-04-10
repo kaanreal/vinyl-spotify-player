@@ -41,14 +41,14 @@ function updateCover() {
             const coverUrl = data.item.album.images[0].url;
             
           //  document.querySelector("#Cover img").src = coverUrl;
-            document.getElementById("round-screen").style.backgroundImage = `url(${coverUrl})`;
-            document.getElementById("round-screen").style.backgroundSize = "cover";
-            document.getElementById("round-screen").style.backgroundPosition = "center";
+            document.getElementsByClassName("vinyl-label")[0].style.backgroundImage = `url(${coverUrl})`;
+            document.getElementsByClassName("vinyl-label")[0].style.backgroundSize = "cover";
+            document.getElementsByClassName("vinyl-label")[0].style.backgroundPosition = "center";
 
             const title = data.item.name;
             document.getElementById("song-title").textContent = title;
         })
-        .catch(err => console.error(err));
+       // .catch(err => console.error(err));
 }
 function switch_playPause() {
    document.getElementById("play-pause").textContent = isPlaying ? "Pause" : "Play";

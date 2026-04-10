@@ -12,19 +12,8 @@ body {
 }
 
 
-#round-screen {
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    overflow: hidden;
-    padding: 20px;
-    box-sizing: border-box;
-    background-image: url("Spotify_Cover_Fehler.png");
-    background-size: cover;
-    background-position: center;
-  /* animation: rotateCover 20s linear infinite; */
-}
-.vinyl-overlay {
+
+/*.vinyl-overlay {
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -38,14 +27,14 @@ body {
             rgba(0, 0, 0, 0) 3px
         );
 
-    mix-blend-mode: multiply; /* macht den Effekt realistischer */
-    opacity: 0.4;             /* Stärke der Rillen */
+    mix-blend-mode: multiply; 
+    opacity: 0.4;             
 }
 .vinyl-hole {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 22px;      /* Größe des Lochs */
+    width: 22px;      
     height: 22px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
@@ -57,6 +46,62 @@ body {
     );
     box-shadow: 0 0 8px rgba(0,0,0,0.8);
     pointer-events: none;
+}  
+*/
+/* --- Zweite Version: Außen Vinyl, innen Cover --- */
+
+#vinyl-version {
+    width: 400px;
+    height: 400px;
+    position: relative;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Außen: schwarze Schallplatte */
+.vinyl-disc {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: black;
+
+    background-image:
+        repeating-radial-gradient(
+            circle,
+            rgba(255,255,255,0.08) 0px,
+            rgba(255,255,255,0.08) 1px,
+            rgba(0,0,0,1) 3px
+        );
+}
+
+/* Innen: kleiner Kreis mit Cover */
+.vinyl-label {
+    width: 160px;   /* Größe des Innenkreises */
+    height: 160px;
+    border-radius: 50%;
+    background-image: url("Spotify_Cover_Fehler.png");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Mittelloch */
+.vinyl-hole {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(0,0,0,0.7) 0%,
+        rgba(0,0,0,0.9) 40%,
+        rgba(0,0,0,1) 100%
+    );
+    box-shadow: 0 0 8px rgba(0,0,0,0.8);
+    z-index: 3;
 }
 
 
@@ -82,8 +127,20 @@ body {
     margin-top: 20px;
     pointer-events: auto;
 }
+#Controls button {
+    
+    height: 20px;
+    width: 30px;
+    font-size: 10px;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
 #song-title{
-    font-size: 20px;
+    font-size: 10px;
     font-weight: bold;
     text-align: center;
     color: white;

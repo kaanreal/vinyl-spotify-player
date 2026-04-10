@@ -26,7 +26,7 @@ function animateCover(timestamp) {
         rotation += delta * 0.01; // Geschwindigkeit
     }
 
-    document.getElementById("round-screen").style.transform =
+    document.getElementById("vinyl-version").style.transform =
         `rotate(${rotation}deg)`;
 
     requestAnimationFrame(animateCover);
