@@ -15,7 +15,7 @@ function handleSwipe() {
     const distance = touchEndX - touchStartX; // letzter punk - erster punkt 
 
     // Mindest-Swipe-Länge (damit kleine Bewegungen ignoriert werden)
-    if (Math.abs(distance) < 50) return;
+    if (Math.abs(distance) < 50) pauseTrack(); // wenn die Bewegung zu klein ist, dann wird die Musik pausiert
 
     if (distance < 0) { // wenn distance negativ ist, dann war die Bewegung nach links
         console.log("Swipe Left → Next Song");
