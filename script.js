@@ -1,10 +1,12 @@
 document.getElementById("next").addEventListener("click", () => {
+     document.getElementsByClassName("vinyl-label")[0].style.transition = "background-image 0.2s ease";
     nextTrack().then(() => setTimeout(updateCover, 300));
     setTimeout(() => rotation = 0, 300); // Reset Rotation
 
 });
 
 document.getElementById("previous").addEventListener("click", () => {
+     document.getElementsByClassName("vinyl-label")[0].style.transition = "background-image 0.2s ease";
     previousTrack().then(() => setTimeout(updateCover, 300));
     setTimeout(() => rotation = 0, 300); // Reset Rotation
 });

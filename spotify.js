@@ -41,6 +41,7 @@ function updateCover() {
             const coverUrl = data.item.album.images[0].url;
             
           //  document.querySelector("#Cover img").src = coverUrl;
+            document.getElementsByClassName("vinyl-label")[0].style.transition = "background-image 2s ease";
             document.getElementsByClassName("vinyl-label")[0].style.backgroundImage = `url(${coverUrl})`;
             document.getElementsByClassName("vinyl-label")[0].style.backgroundSize = "cover";
             document.getElementsByClassName("vinyl-label")[0].style.backgroundPosition = "center";
