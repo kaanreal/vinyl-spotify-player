@@ -9,15 +9,34 @@ async function spotifyRequest(endpoint, method = "GET", body = null) {
         body: body ? JSON.stringify(body) : null
     });
 }
+
+async function parseJsonSafe(response) {
+    if (response.status === 204) {
+        return null;
+    }
+
+    const text = await response.text();
+    if (!text) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Spotify response was not valid JSON:", error);
+        return null;
+    }
+}
+
 function getCurrentSong() {
     return spotifyRequest("me/player/currently-playing");
 }
 function checkisPlaying() {
    // console.log("Überprüfe Wiedergabestatus...");
     getCurrentSong()
-    .then(response => response.json())  
+    .then(response => parseJsonSafe(response))
     .then(data => {
-        if(data.isPlaying  || data.is_playing) { // Je nach Spotify API Version könnte es isPlaying oder is_playing sein
+        if (data && (data.isPlaying || data.is_playing)) { // Je nach Spotify API Version könnte es isPlaying oder is_playing sein
             isPlaying = true;
             return;
         } else {
@@ -26,11 +45,12 @@ function checkisPlaying() {
         }
 
     })
+    .catch(err => console.error("checkisPlaying failed:", err));
 
 }
 function updateCover() {
     getCurrentSong()
-        .then(response => response.json())
+        .then(response => parseJsonSafe(response))
         .then(data => {
             if (!data || !data.item) {
                 console.log("Keine Musik läuft");
@@ -49,7 +69,7 @@ function updateCover() {
             const title = data.item.name;
             document.getElementById("song-title").textContent = title;
         })
-       // .catch(err => console.error(err));
+        .catch(err => console.error("updateCover failed:", err));
 }
 function switch_playPause() {
    document.getElementById("play-pause").textContent = isPlaying ? "Pause" : "Play";
