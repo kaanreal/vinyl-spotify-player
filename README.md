@@ -88,7 +88,7 @@ vinyl-spotify-player/
        └─ setup.sh
 ```
 
----
+----
 
 ## 🔄 Operation Flow
 
