@@ -29,4 +29,4 @@ def refresh_access_token():
 
 while True:
     refresh_access_token()
-    time.sleep(3300)  # 55 Minuten
+    time.sleep(3300)  # 55 minutes

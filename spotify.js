@@ -32,11 +32,11 @@ function getCurrentSong() {
     return spotifyRequest("me/player/currently-playing");
 }
 function checkisPlaying() {
-   // console.log("Überprüfe Wiedergabestatus...");
+   // console.log("Checking playback status...");
     getCurrentSong()
     .then(response => parseJsonSafe(response))
     .then(data => {
-        if (data && (data.isPlaying || data.is_playing)) { // Je nach Spotify API Version könnte es isPlaying oder is_playing sein
+        if (data && (data.isPlaying || data.is_playing)) { // Depending on Spotify API version, it may be isPlaying or is_playing
             isPlaying = true;
             return;
         } else {
@@ -75,7 +75,7 @@ function switch_playPause() {
    document.getElementById("play-pause").textContent = isPlaying ? "Pause" : "Play";
         
 }
-switch_playPause(); // Initialer Aufruf, um den Button-Text zu setzen
+switch_playPause(); // Initial call to set the button text
 function nextTrack() {
     return spotifyRequest("me/player/next", "POST");
 }

@@ -26,7 +26,7 @@ function animateCover(timestamp) {
     
 
     if (rotating) {
-        rotation += delta * 0.01; // Geschwindigkeit
+        rotation += delta * 0.01; // Speed
     }
 
     document.getElementById("vinyl-version").style.transform =
@@ -35,7 +35,7 @@ function animateCover(timestamp) {
     requestAnimationFrame(animateCover);
 }
 function isplaying() {
-    //console.log("Überprüfe isplaying...");
+    //console.log("Checking isplaying...");
     if  (isPlaying) {
         rotating = true; // START
     }else {

@@ -1,6 +1,6 @@
 
 body {
-    background: black;       /* oder deine Wunschfarbe */
+    background: black;       /* or your preferred color */
     margin: 0;
     padding: 0;
     height: 100vh;
@@ -48,7 +48,7 @@ body {
     pointer-events: none;
 }  
 */
-/* --- Zweite Version: Außen Vinyl, innen Cover --- */
+/* --- Second version: outer vinyl, inner cover --- */
 
 #vinyl-version {
     width: 400px;
@@ -60,7 +60,7 @@ body {
     align-items: center;
 }
 
-/* Außen: schwarze Schallplatte */
+/* Outer: black vinyl record */
 .vinyl-disc {
     position: absolute;
     inset: 0;
@@ -76,9 +76,9 @@ body {
         );
 }
 
-/* Innen: kleiner Kreis mit Cover */
+/* Inner: small circle with cover */
 .vinyl-label {
-    width: 160px;   /* Größe des Innenkreises */
+    width: 160px;   /* Size of the inner circle */
     height: 160px;
     border-radius: 50%;
     background-image: url("Spotify_Cover_Fehler.png");
@@ -88,7 +88,7 @@ body {
     z-index: 2;
 }
 
-/* Mittelloch */
+/* Center hole */
 .vinyl-hole {
     position: absolute;
     width: 22px;
