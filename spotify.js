@@ -17,7 +17,7 @@ function checkisPlaying() {
     getCurrentSong()
     .then(response => response.json())  
     .then(data => {
-        if(data.isPlaying  || data.is_playing) { // Je nach Spotify API Version könnte es isPlaying oder is_playing sein
+        if(data.isPlaying  || data.is_playing) {
             isPlaying = true;
             return;
         } else {
@@ -50,6 +50,16 @@ function updateCover() {
         })
         .catch(err => console.error(err));
 }
+function updateMotor() {
+
+    if (isPlaying) {
+        fetch("http://localhost:5000/motor/start");
+        
+    } else {
+        fetch("http://localhost:5000/motor/stop");
+    }   
+}
+
 function switch_playPause() {
    document.getElementById("play-pause").textContent = isPlaying ? "Pause" : "Play";
         
