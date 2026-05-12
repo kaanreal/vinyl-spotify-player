@@ -1,12 +1,12 @@
 document.getElementById("next").addEventListener("click", () => {
     nextTrack().then(() => setTimeout(updateCover, 300));
-    setTimeout(() => rotation = 0, 300); // Reset Rotation
+ 
 
 });
 
 document.getElementById("previous").addEventListener("click", () => {
     previousTrack().then(() => setTimeout(updateCover, 300));
-    setTimeout(() => rotation = 0, 300); // Reset Rotation
+  
 });
 
 let isPlaying = false;
