@@ -1,3 +1,4 @@
+var lastSong = null;
 async function spotifyRequest(endpoint, method = "GET", body = null) {
     const SPOTIFY_ACCESS_TOKEN = await getAccessToken();
     return fetch("https://api.spotify.com/v1/" + endpoint, {
@@ -29,6 +30,13 @@ function checkisPlaying() {
 
 }
 function updateCover() {
+    
+    if (lastSong == null){
+        lastSong = getCurrentSong()
+    }
+    if(lastSong == getCurrentSong()){
+        return;
+    }
     getCurrentSong()
         .then(response => response.json())
         .then(data => {
