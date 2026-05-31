@@ -1,4 +1,4 @@
-var lastSong = null;
+
 async function spotifyRequest(endpoint, method = "GET", body = null) {
     const SPOTIFY_ACCESS_TOKEN = await getAccessToken();
     return fetch("https://api.spotify.com/v1/" + endpoint, {
@@ -30,34 +30,44 @@ function checkisPlaying() {
 
 }
 function updateCover() {
-    
-    if (lastSong == null){
-        lastSong = getCurrentSong()
-    }
-    if(lastSong == getCurrentSong()){
-        return;
-    }
     getCurrentSong()
         .then(response => response.json())
         .then(data => {
             if (!data || !data.item) {
-                console.log("Keine Musik läuft");
-                console.log("Daten:", data);
+                console.log("No music playing");
                 return;
             }
 
             const coverUrl = data.item.album.images[0].url;
-            
-          //  document.querySelector("#Cover img").src = coverUrl;
-            document.getElementById("round-screen").style.backgroundImage = `url(${coverUrl})`;
-            document.getElementById("round-screen").style.backgroundSize = "cover";
-            document.getElementById("round-screen").style.backgroundPosition = "center";
+            const screen = document.getElementById("round-screen");
 
-            const title = data.item.name;
-            document.getElementById("song-title").textContent = title;
+            const currentBg = screen.style.backgroundImage.replaceAll('"', "");
+
+            // If the cover is already the same → do nothing
+            if (currentBg.includes(coverUrl)) return;
+
+            // Start fade-out
+            screen.classList.remove("FadeIn");
+            screen.classList.add("FadeOut");
+
+            // After fade-out is done, change the image and fade in
+            setTimeout(() => {
+
+                // Swap image
+                screen.style.backgroundImage = `url("${coverUrl}")`;
+
+                // Switch to fade-in
+                screen.classList.remove("FadeOut");
+                screen.classList.add("FadeIn");
+
+                // Update title
+                document.getElementById("song-title").textContent = data.item.name;
+
+            }, 500); // same as fadeOut duration
         })
         .catch(err => console.error(err));
 }
+
 function updateMotor() {
 
     if (isPlaying) {

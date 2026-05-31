@@ -1,6 +1,9 @@
 from flask import Flask
+from flask_cors import CORS
 
-app = Flask(__name__)   
+app = Flask(__name__)
+CORS(app)  # GANZ WICHTIG
+
 
 @app.route("/motor/start")
 def motor_start():

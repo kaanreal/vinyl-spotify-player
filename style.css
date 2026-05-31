@@ -24,36 +24,25 @@ body {
     background-position: center;
   /* animation: rotateCover 20s linear infinite; */
 }
-#round-screen .FadeIn{
-    opacity: 1;
-	animation-name: fadeInOpacity;
-	animation-iteration-count: 1;
-	animation-timing-function: ease-in;
-	animation-duration: 2s;
+#round-screen.FadeIn {
+    animation: fadeInOpacity 0.5s ease-in forwards;
 }
+
+#round-screen.FadeOut {
+    animation: fadeOutOpacity 0.5s ease-out forwards;
+}
+
 @keyframes fadeInOpacity {
-    0% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
-#round-screen .FadeOut{
-    opacity: 0;
-    animation-name: fadeOutOpacity;
-    animation-iteration-count: 1;
-    animation-timing-function: ease-out;
-    animation-duration: 2s;
-}
+
 @keyframes fadeOutOpacity {
-    0% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
+    0% { opacity: 1; }
+    100% { opacity: 0; }
 }
+
+
 .vinyl-overlay {
     position: absolute;
     inset: 0;
