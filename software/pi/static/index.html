@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="style.css">
+<title>Vinyl Player</title>
+</head>
+<body>
+<div id="screen">
+  <div id="artwork">
+    <div id="vinyl-hole"></div>
+    <div id="grooves"></div>
+  </div>
+  <div id="ui">
+    <p id="title">—</p>
+    <p id="artist">—</p>
+    <div id="controls">
+      <button id="prev" aria-label="Previous">⏮</button>
+      <button id="playpause" aria-label="Play/Pause">▶</button>
+      <button id="next" aria-label="Next">⏭</button>
+    </div>
+  </div>
+  <div id="setup-overlay">
+    <p>Not authenticated</p>
+    <a id="setup-link" href="/setup">Set up Spotify</a>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

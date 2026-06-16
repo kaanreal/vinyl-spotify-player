@@ -1,0 +1,6 @@
+flask>=3.0
+flask-cors>=4.0
+requests>=2.31
+RPi.GPIO>=0.7
+gpiozero>=2.0
+Pillow>=10.0
