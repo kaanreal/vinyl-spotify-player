@@ -111,12 +111,12 @@ Key commits I made to this repository (excluding documentation-only changes):
 
 | Commit | Description |
 |--------|-------------|
-| [`c018dc2`](https://github.com/kaanreal/vinyl-spotify-player/commit/c018dc2) | **Add web UI, Spotify integration & token refresher** — Introduced the first functional web frontend (`index.html`, `style.css`, `script.js`, `spotify.js`, `update.js`), Spotify control flow, OAuth token refresh via `refresh.py`, startup scripts (`start.sh`, `start.bat`), and a static HTTP server setup. This was the foundation for all Spotify playback. |
-| [`fed0709`](https://github.com/kaanreal/vinyl-spotify-player/commit/fed0709) | **Add vinyl UI, touch swipe, and playback sync** — Added a vinyl-style player UI with swipe gestures (next/previous/pause), vinyl rotation animation, improved Spotify response handling (`parseJsonSafe`, `checkisPlaying`), album art on vinyl label, and periodic playback state polling. |
-| [`574dd75`](https://github.com/kaanreal/vinyl-spotify-player/commit/574dd75) | **Refactor UI to round-screen, remove touch handler** — Replaced the vinyl-style markup with a simpler round-screen layout matching the circular 2.8" hardware display. Removed `handle_touch.js`, adjusted CSS for round-screen styling, reset rotation after track changes, and cleaned up logging. |
-| [`878c5db`](https://github.com/kaanreal/vinyl-spotify-player/commit/878c5db) | Rename 3D model STL for clarity |
-| [`0b2fb53`](https://github.com/kaanreal/vinyl-spotify-player/commit/0b2fb53) | README update with full Bill of Materials |
-| [`f575cb3`](https://github.com/kaanreal/vinyl-spotify-player/commit/f575cb3) | Initial detailed project README |
+| [`c018dc2`](https://github.com/kaanreal/jukebox/commit/c018dc2) | **Add web UI, Spotify integration & token refresher** — Introduced the first functional web frontend (`index.html`, `style.css`, `script.js`, `spotify.js`, `update.js`), Spotify control flow, OAuth token refresh via `refresh.py`, startup scripts (`start.sh`, `start.bat`), and a static HTTP server setup. This was the foundation for all Spotify playback. |
+| [`fed0709`](https://github.com/kaanreal/jukebox/commit/fed0709) | **Add vinyl UI, touch swipe, and playback sync** — Added a vinyl-style player UI with swipe gestures (next/previous/pause), vinyl rotation animation, improved Spotify response handling (`parseJsonSafe`, `checkisPlaying`), album art on vinyl label, and periodic playback state polling. |
+| [`574dd75`](https://github.com/kaanreal/jukebox/commit/574dd75) | **Refactor UI to round-screen, remove touch handler** — Replaced the vinyl-style markup with a simpler round-screen layout matching the circular 2.8" hardware display. Removed `handle_touch.js`, adjusted CSS for round-screen styling, reset rotation after track changes, and cleaned up logging. |
+| [`878c5db`](https://github.com/kaanreal/jukebox/commit/878c5db) | Rename 3D model STL for clarity |
+| [`0b2fb53`](https://github.com/kaanreal/jukebox/commit/0b2fb53) | README update with full Bill of Materials |
+| [`f575cb3`](https://github.com/kaanreal/jukebox/commit/f575cb3) | Initial detailed project README |
 
 ---
 

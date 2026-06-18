@@ -2,7 +2,7 @@
 
 ### Summary
 
-This PR adds the initial 3D model for the custom enclosure, implements a Pi runtime scaffold with state machine architecture, and performs comprehensive cleanup and formatting improvements across the entire project.
+This PR adds the initial 3D model for the custom enclosure, implements the Jukebox runtime with Flask SSE server and pygame viewer, and performs comprehensive cleanup and formatting improvements across the entire project.
 
 ### Changes
 
@@ -20,7 +20,7 @@ This PR adds the initial 3D model for the custom enclosure, implements a Pi runt
 - **Added** `software/pi/display.py` — Display abstraction layer
 - **Added** `software/install/setup.sh` — Pi bootstrap script that:
   - Installs Python dependencies
-  - Syncs project to `/opt/vinyl-spotify-player`
+  - Syncs project to `/opt/jukebox`
   - Creates systemd service for auto-startup
 
 #### 📄 Documentation

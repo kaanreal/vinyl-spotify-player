@@ -16,7 +16,7 @@ Responsibilities:
 
 ## Personal Contribution
 
-My main responsibility during the project was supporting the mechanical development of the Vinyl Spotify Player.
+My main responsibility during the project was supporting the mechanical development of the Jukebox.
 
 I worked closely with Kaan on the design and development of the enclosure and internal component layout. Throughout the project, I helped create, test, and improve multiple 3D models to ensure that all hardware components could fit correctly inside the final design.
 

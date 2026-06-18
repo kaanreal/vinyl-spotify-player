@@ -1,198 +1,315 @@
-#!/usr/bin/env python3
-"""Vinyl Spotify Player — Web server + GPIO control."""
+"""Jukebox UI server — Flask application serving the playback UI."""
 
-from __future__ import annotations
-
+import base64
+import json
 import logging
-import sys
+import os
+import queue
+import subprocess
 import threading
 import time
-from pathlib import Path
+from typing import Any, Dict, Optional
 
-import flask
-from flask_cors import CORS
+from flask import Flask, Response, jsonify, send_from_directory, stream_with_context
 
-from config import load_config
-from gpio import GPIOHandler, TonearmState
-from spotify_auth import (
-    TokenManager,
-    build_auth_url,
-    exchange_code,
+logger = logging.getLogger(__name__)
+
+app: Flask = Flask(__name__)
+
+UI_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Thread-safe shared metadata store
+_metadata_lock = threading.Lock()
+_metadata: Dict[str, Any] = {
+    "title": "",
+    "artist": "",
+    "album": "",
+    "art_url": "",
+    "paused": True,
+    "source": "",
+    "active": False,
+}
+_real_art_url: str = ""
+_art_mtime: float = 0.0
+
+# Cache
+_cache_ts: float = 0.0
+_cache_ttl: float = 0.5
+
+TRANSPARENT_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAA"
+    "ABJRU5ErkJggg=="
 )
-from spotify_client import SpotifyClient
 
-HERE = Path(__file__).parent
+# ── SSE (Server-Sent Events) ─────────────────────────────────────────────────
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    stream=sys.stdout,
-)
-
-app = flask.Flask(
-    __name__,
-    static_folder=str(HERE / "static"),
-    static_url_path="",
-)
-CORS(app)
-
-cfg = load_config()
-token_mgr = TokenManager(cfg["spotify_client_id"])
-spotify = SpotifyClient(token_mgr)
-gpio = GPIOHandler(cfg)
-_verifier: str | None = None
-_current: dict = {}
-_current_lock = threading.Lock()
+_sse_queues: list["queue.Queue[dict]"] = []
+_sse_lock = threading.Lock()
+_sse_watcher_started = False
 
 
-def _poll_loop() -> None:
-    while True:
-        track = spotify.currently_playing()
-        with _current_lock:
-            global _current
-            _current = track or {}
-        time.sleep(cfg.get("poll_interval", 2))
+def _sse_broadcast() -> None:
+    """Force-refresh metadata and push to every connected SSE client."""
+    global _cache_ts
+    _cache_ts = 0.0
+    _refresh_metadata()
+    with _metadata_lock:
+        payload = _metadata.copy()
+    with _sse_lock:
+        dead: list[queue.Queue] = []
+        for q in _sse_queues:
+            try:
+                q.put_nowait(payload)
+            except queue.Full:
+                dead.append(q)
+        for q in dead:
+            _sse_queues.remove(q)
 
 
-@app.route("/")
-def index():
-    return flask.send_from_directory(str(HERE / "static"), "index.html")
+def _start_sse_watcher() -> None:
+    """Daemon thread: follow playerctl status changes and broadcast via SSE."""
+    global _sse_watcher_started
+    if _sse_watcher_started:
+        return
+    _sse_watcher_started = True
+
+    def _watch() -> None:
+        while True:
+            try:
+                proc = subprocess.Popen(
+                    ["playerctl", "--follow", "status"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                )
+                logger.info("SSE watcher: playerctl --follow started")
+                for line in proc.stdout:
+                    status = line.strip()
+                    if status in ("Playing", "Paused", "Stopped"):
+                        _sse_broadcast()
+                proc.wait()
+                logger.warning(
+                    "SSE watcher: playerctl exited (code %d), restarting...",
+                    proc.returncode,
+                )
+            except FileNotFoundError:
+                logger.error("SSE watcher: playerctl not found, giving up")
+                return
+            except Exception as exc:
+                logger.error("SSE watcher error: %s", exc)
+            time.sleep(2)
+
+    threading.Thread(target=_watch, daemon=True).start()
 
 
-@app.route("/api/status")
-def api_status():
-    with _current_lock:
-        playing = bool(_current.get("is_playing"))
-        return {
-            "authenticated": token_mgr.has_tokens(),
-            "playing": playing,
-            "track": _current,
-            "tonearm": gpio.tonearm_state.value,
-        }
+@app.route("/events")
+def sse_events() -> Response:
+    _start_sse_watcher()
 
+    q: queue.Queue = queue.Queue(maxsize=10)
+    with _sse_lock:
+        _sse_queues.append(q)
 
-@app.route("/api/play", methods=["POST"])
-def api_play():
-    ok = spotify.play()
-    return {"ok": ok}
+    def generate() -> str:
+        try:
+            # Send current state immediately on connect
+            with _metadata_lock:
+                yield f"data: {json.dumps(_metadata)}\n\n"
 
+            while True:
+                try:
+                    data = q.get(timeout=30)
+                    yield f"data: {json.dumps(data)}\n\n"
+                except queue.Empty:
+                    yield "data: heartbeat\n\n"
+        except GeneratorExit:
+            pass
+        except BrokenPipeError:
+            pass
+        finally:
+            with _sse_lock:
+                try:
+                    _sse_queues.remove(q)
+                except ValueError:
+                    pass
 
-@app.route("/api/pause", methods=["POST"])
-def api_pause():
-    ok = spotify.pause()
-    return {"ok": ok}
-
-
-@app.route("/api/next", methods=["POST"])
-def api_next():
-    ok = spotify.next_track()
-    return {"ok": ok}
-
-
-@app.route("/api/prev", methods=["POST"])
-def api_prev():
-    ok = spotify.previous_track()
-    return {"ok": ok}
-
-
-@app.route("/api/motor/start", methods=["POST"])
-def api_motor_start():
-    gpio.set_motor(0.6)
-    return {"ok": True}
-
-
-@app.route("/api/motor/stop", methods=["POST"])
-def api_motor_stop():
-    gpio.stop_motor()
-    return {"ok": True}
-
-
-@app.route("/setup")
-def setup_page():
-    return flask.render_template_string(  # nosec
-        """<!DOCTYPE html><html><body style="background:#111;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
-        <div style="text-align:center">
-        <h1>Vinyl Spotify Player</h1>
-        {% if authed %}
-        <p style="color:#1DB954">✓ Authenticated</p>
-        {% else %}
-        <a href="{{ url }}" style="display:inline-block;padding:14px 28px;background:#1DB954;color:#000;border-radius:8px;text-decoration:none;font-weight:bold">Connect Spotify</a>
-        {% endif %}
-        </div></body></html>""",
-        authed=token_mgr.has_tokens(),
-        url=flask.url_for("api_auth"),
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
-@app.route("/api/auth")
-def api_auth():
-    global _verifier, _last_auth_state
-    url, _verifier = build_auth_url(cfg["spotify_client_id"], cfg["spotify_redirect_uri"])
-    return flask.redirect(url)
-
-
-@app.route("/callback")
-def callback():
-    code = flask.request.args.get("code")
-    if not code or not _verifier:
-        return "Missing code or verifier", 400
+def _run_playerctl(args: list[str], timeout: int = 2) -> Optional[str]:
     try:
-        tokens = exchange_code(cfg["spotify_client_id"], cfg["spotify_redirect_uri"], code, _verifier)
-        token_mgr.set_tokens(tokens)
-        global _verifier
-        _verifier = None
-
-        threading.Thread(target=_poll_loop, daemon=True).start()
-        gpio.start_monitoring()
-
-        return flask.redirect("/")
-    except Exception as e:
-        logging.error("Auth error: %s", e)
-        return f"Auth failed: {e}", 500
-
-
-@app.route("/api/cover")
-def api_cover():
-    with _current_lock:
-        url = _current.get("cover_url")
-    if url:
-        return flask.redirect(url)
-    return "", 204
-
-
-@app.route("/health")
-def health():
-    return {"ok": True}
-
-
-def _tonearm_cb(state: TonearmState) -> None:
-    if state == TonearmState.DOWN:
-        spotify.play()
-    else:
-        spotify.pause()
-
-
-def main() -> int:
-    gpio.on_tonearm_change(_tonearm_cb)
-
-    if token_mgr.has_tokens():
-        threading.Thread(target=_poll_loop, daemon=True).start()
-        gpio.start_monitoring()
-        logging.info("authenticated — polling started")
-
-    host = cfg.get("host", "0.0.0.0")
-    port = cfg.get("port", 8888)
-    logging.info("server starting on %s:%s", host, port)
-
-    try:
-        app.run(host=host, port=port, debug=False, use_reloader=False)
-    except KeyboardInterrupt:
+        result = subprocess.run(
+            ["playerctl"] + args,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError):
         pass
-    finally:
-        gpio.cleanup()
+    return None
 
-    return 0
+
+def _detect_active_player() -> Optional[str]:
+    players_out = _run_playerctl(["-l"])
+    if not players_out:
+        return None
+    players = [p.strip() for p in players_out.splitlines() if p.strip()]
+
+    # Prefer a player that is actively Playing
+    for player in players:
+        status = _run_playerctl(["--player", player, "status"])
+        if status == "Playing":
+            return player
+
+    return players[0] if players else None
+
+
+def _read_metadata_from_player(player: str) -> Dict[str, Any]:
+    global _real_art_url, _art_mtime
+    title = _run_playerctl(["--player", player, "metadata", "title"]) or ""
+    artist = _run_playerctl(["--player", player, "metadata", "artist"]) or ""
+    album = _run_playerctl(["--player", player, "metadata", "album"]) or ""
+    art_url = _run_playerctl(["--player", player, "metadata", "mpris:artUrl"]) or ""
+
+    with _metadata_lock:
+        if art_url != _real_art_url:
+            _real_art_url = art_url
+            _art_mtime = time.time()
+
+    # Determine source from player name
+    source = "airplay" if "shairport" in player.lower() else "spotify"
+
+    status = _run_playerctl(["--player", player, "status"]) or "Paused"
+    paused = status.lower() != "playing"
+
+    return {
+        "title": title,
+        "artist": artist,
+        "album": album,
+        "art_url": "/art",
+        "art_mtime": _art_mtime,
+        "paused": paused,
+        "source": source,
+        "active": True,
+    }
+
+
+def _find_art_file(art_url: str) -> Optional[bytes]:
+    if not art_url:
+        return None
+
+    # MPRIS artUrl may be a local file path
+    local_path = art_url.replace("file://", "")
+    if os.path.isfile(local_path):
+        try:
+            with open(local_path, "rb") as f:
+                return f.read()
+        except OSError:
+            pass
+
+    # Fall back to the bridge-written file
+    bridge_path = "/tmp/current_art.jpg"
+    if os.path.isfile(bridge_path):
+        try:
+            with open(bridge_path, "rb") as f:
+                return f.read()
+        except OSError:
+            pass
+
+    return None
+
+
+def _refresh_metadata() -> None:
+    """Poll playerctl and update the shared metadata store."""
+    global _metadata, _real_art_url, _cache_ts
+    now = time.monotonic()
+    if now - _cache_ts < _cache_ttl:
+        return
+    _cache_ts = now
+
+    player = _detect_active_player()
+    if player is None:
+        with _metadata_lock:
+            _metadata = {
+                "title": "",
+                "artist": "",
+                "album": "",
+                "art_url": "",
+                "art_mtime": 0.0,
+                "paused": True,
+                "source": _metadata.get("source", ""),
+                "active": False,
+            }
+            _real_art_url = ""
+            _art_mtime = 0.0
+        return
+
+    new_meta = _read_metadata_from_player(player)
+    with _metadata_lock:
+        _metadata.update(new_meta)
+
+
+def _toggle_playback() -> None:
+    """Toggle play/pause on the active player."""
+    player = _detect_active_player()
+    if player is None:
+        return
+    _run_playerctl(["--player", player, "play-pause"])
+
+
+@app.route("/")
+def index() -> Response:
+    return send_from_directory(UI_DIR, "index.html")
+
+
+@app.route("/status")
+def status() -> Response:
+    _refresh_metadata()
+    with _metadata_lock:
+        return jsonify(_metadata.copy())
+
+
+@app.route("/art")
+def art() -> Response:
+    _refresh_metadata()
+    with _metadata_lock:
+        real_url = _real_art_url
+
+    art_data = _find_art_file(real_url)
+    if art_data is not None:
+        return Response(art_data, mimetype="image/jpeg", headers={"Cache-Control": "no-cache"})
+
+    return Response(TRANSPARENT_PNG, mimetype="image/png", headers={"Cache-Control": "no-cache"})
+
+
+@app.route("/toggle")
+def toggle() -> Response:
+    global _cache_ts
+    _toggle_playback()
+    _cache_ts = 0.0  # force fresh playerctl read
+    _refresh_metadata()
+    with _metadata_lock:
+        return jsonify(_metadata.copy())
+
+
+def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+    port = int(os.environ.get("UI_PORT", "8080"))
+    logger.info("Starting Jukebox UI on port %d", port)
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

@@ -1,0 +1,16 @@
+[Unit]
+Description=Jukebox UI Server
+After=network.target
+
+[Service]
+User=${PI_USER}
+WorkingDirectory=/home/${PI_USER}/jukebox/software/pi
+ExecStart=/usr/bin/python3 server.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+Environment=UI_PORT=8080
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+
+[Install]
+WantedBy=multi-user.target

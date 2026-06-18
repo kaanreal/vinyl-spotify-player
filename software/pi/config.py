@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-CONFIG_DIR = Path(os.getenv("VINYL_CONFIG_DIR", Path.home() / ".config" / "vinyl-spotify"))
+CONFIG_DIR = Path(os.getenv("JUKEBOX_CONFIG_DIR", Path.home() / ".config" / "jukebox"))
 CONFIG_FILE = CONFIG_DIR / "config.json"
 TOKEN_FILE = CONFIG_DIR / "tokens.json"
 

@@ -1,6 +1,6 @@
 # Concept
 
-The **Vinyl Spotify Player** should feel like a physical record player while running fully autonomous on Raspberry Pi.
+The **Jukebox** should feel like a physical record player while running fully autonomous on Raspberry Pi.
 
 ## UX Goals
 

@@ -1,4 +1,4 @@
-# 📄 Projektprotokoll – Vinyl Spotify Player
+# 📄 Projektprotokoll – Jukebox
 Zeitraum: 09.04.2026 – 16.06.2026
 Autor: Marc Enge
 

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jukebox</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: #000;
+  overflow: hidden;
+  cursor: none;
+  user-select: none;
+}
+
+#container {
+  position: relative;
+  width: 100%; height: 100%;
+}
+
+.wrap {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+#wrap-a { z-index: 2; }
+#wrap-b { z-index: 1; }
+
+.record {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: #111;
+  backface-visibility: hidden;
+}
+
+#grooves {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+#spindle {
+  position: absolute;
+  top: 46%; left: 46%;
+  width: 8%; height: 8%;
+  border-radius: 50%;
+  background: #1a1a1a;
+  z-index: 5;
+  pointer-events: none;
+}
+
+#idle {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  color: rgba(255,255,255,0.2);
+  font-size: 4vmin;
+  font-weight: 300;
+  letter-spacing: 0.5vmin;
+  pointer-events: none;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes wrap-out {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.75); opacity: 0; }
+}
+
+@keyframes wrap-in {
+  0% { transform: scale(0.75); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.warp-out {
+  animation: wrap-out 0.45s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+.warp-in {
+  animation: wrap-in 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes pulse-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="wrap-a" class="wrap"><div id="layer-a" class="record"></div></div>
+  <div id="wrap-b" class="wrap"><div id="layer-b" class="record"></div></div>
+  <canvas id="grooves"></canvas>
+  <div id="spindle"></div>
+  <div id="idle">Ready</div>
+</div>
+
+<script>
+const CONFIG = {
+  POLL_INTERVAL: 1000,
+};
+
+const wrapA = document.getElementById('wrap-a');
+const wrapB = document.getElementById('wrap-b');
+const layerA = document.getElementById('layer-a');
+const layerB = document.getElementById('layer-b');
+const grooves = document.getElementById('grooves');
+const spindle = document.getElementById('spindle');
+const idleEl = document.getElementById('idle');
+
+let currentTrack = '';
+let frontWrap = 'a';
+let state = { active: false, paused: true };
+let spinAngle = 0;
+let spinRaf = null;
+let lastSpinTime = 0;
+const SPIN_RATE = 360 / 12000;
+let sseConnected = false;
+let sseSource = null;
+
+function getVisibleLayer() {
+  return frontWrap === 'a' ? layerA : layerB;
+}
+
+function getHiddenWrap() {
+  return frontWrap === 'a' ? wrapB : wrapA;
+}
+
+function getHiddenLayer() {
+  return frontWrap === 'a' ? layerB : layerA;
+}
+
+function spinLoop(timestamp) {
+  if (lastSpinTime === 0) lastSpinTime = timestamp;
+  const dt = timestamp - lastSpinTime;
+  lastSpinTime = timestamp;
+  spinAngle = (spinAngle + dt * SPIN_RATE) % 360;
+  const rot = `rotate(${spinAngle}deg)`;
+  layerA.style.transform = rot;
+  layerB.style.transform = rot;
+  spinRaf = requestAnimationFrame(spinLoop);
+}
+
+function startSpin() {
+  if (spinRaf !== null) return;
+  lastSpinTime = 0;
+  spinRaf = requestAnimationFrame(spinLoop);
+}
+
+function stopSpin() {
+  if (spinRaf !== null) {
+    cancelAnimationFrame(spinRaf);
+    spinRaf = null;
+  }
+}
+
+function syncSpin() {
+  if (state.active && !state.paused) {
+    startSpin();
+  } else {
+    stopSpin();
+  }
+}
+
+function drawGrooves(canvas) {
+  const size = Math.min(window.innerWidth, window.innerHeight);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;z-index:3;pointer-events:none`;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, size, size);
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = size / 2 - 2;
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+  ctx.lineWidth = 0.5;
+  for (let r = maxR; r > maxR * 0.22; r -= maxR * 0.018) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, maxR * 0.22, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function setArt(url) {
+  const backWrap = getHiddenWrap();
+  const frontWrapEl = frontWrap === 'a' ? wrapA : wrapB;
+  const backLayer = getHiddenLayer();
+
+  if (url) {
+    backLayer.style.backgroundImage = `url(${url})`;
+  } else {
+    backLayer.style.backgroundImage = 'none';
+    backLayer.style.backgroundColor = '#111';
+  }
+
+  frontWrapEl.classList.remove('warp-out', 'warp-in');
+  backWrap.classList.remove('warp-out', 'warp-in');
+  void frontWrapEl.offsetWidth;
+
+  frontWrapEl.classList.add('warp-out');
+  backWrap.classList.add('warp-in');
+
+  frontWrap = frontWrap === 'a' ? 'b' : 'a';
+
+  setTimeout(() => {
+    frontWrapEl.classList.remove('warp-out');
+    backWrap.classList.remove('warp-in');
+  }, 500);
+
+  syncSpin();
+}
+
+function updateUI(data) {
+  state = data;
+
+  if (!data.active) {
+    stopSpin();
+    idleEl.style.display = 'flex';
+    layerA.style.backgroundImage = 'none';
+    layerA.style.backgroundColor = '#111';
+    layerB.style.backgroundImage = 'none';
+    layerB.style.backgroundColor = '#111';
+    return;
+  }
+
+  idleEl.style.display = 'none';
+
+  const trackKey = (data.title || '') + '|' + (data.artist || '');
+  if (trackKey !== currentTrack) {
+    currentTrack = trackKey;
+    setArt('/art?' + Date.now());
+  } else {
+    syncSpin();
+  }
+}
+
+async function fetchStatus() {
+  if (sseConnected) return;
+  try {
+    const res = await fetch('/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    updateUI(data);
+  } catch {}
+}
+
+function setupSSE() {
+  if (sseSource) sseSource.close();
+  sseSource = new EventSource('/events');
+  sseSource.onopen = () => { sseConnected = true; };
+  sseSource.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      updateUI(data);
+    } catch {}
+  };
+  sseSource.onerror = () => {
+    sseConnected = false;
+    sseSource.close();
+    setTimeout(setupSSE, 3000);
+  };
+}
+
+async function handleToggle() {
+  if (state.active) {
+    state = { ...state, paused: !state.paused };
+    syncSpin();
+    spindle.style.animation = 'none';
+    void spindle.offsetWidth;
+    spindle.style.animation = 'pulse-scale 0.2s ease';
+  }
+  try {
+    const res = await fetch('/toggle');
+    if (res.ok) {
+      const data = await res.json();
+      state = data;
+      syncSpin();
+    }
+  } catch {}
+}
+
+fetchStatus().then(() => setupSSE());
+setInterval(fetchStatus, CONFIG.POLL_INTERVAL);
+
+container.addEventListener('click', handleToggle);
+container.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  handleToggle();
+}, { passive: false });
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => drawGrooves(grooves), 200);
+});
+
+drawGrooves(grooves);
+</script>
+</body>
+</html>

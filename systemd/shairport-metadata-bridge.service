@@ -1,0 +1,15 @@
+[Unit]
+Description=Jukebox AirPlay Cover Art Metadata Bridge
+After=shairport-sync.service
+BindsTo=shairport-sync.service
+
+[Service]
+User=${PI_USER}
+WorkingDirectory=/home/${PI_USER}/jukebox/software/pi
+ExecStart=/usr/bin/python3 metadata_bridge.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
